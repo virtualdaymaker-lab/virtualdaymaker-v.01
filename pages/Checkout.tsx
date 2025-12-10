@@ -211,7 +211,7 @@ export const Checkout: React.FC = () => {
                          <AlertTriangle size={20} className="text-red-400 flex-shrink-0" />
                          <div>
                              <p className="text-red-400 text-xs font-bold uppercase tracking-wide">NO KEYS DETECTED</p>
-                             <p className="text-red-200/70 text-[10px] mt-1">Please configure PayPal or Stripe in the Admin Dashboard > Commerce Tab to take real payments.</p>
+                             <p className="text-red-200/70 text-[10px] mt-1">Please configure PayPal or Stripe in the Admin Dashboard → Commerce Tab to take real payments.</p>
                          </div>
                      </div>
                  )}
