@@ -1,0 +1,9 @@
+{
+  "name": "VdM v0.1",
+  "description": "A modular Visual Operating System for Commerce, Estate Management, and Personal AI Legacy.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}

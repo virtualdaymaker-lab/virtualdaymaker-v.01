@@ -1,0 +1,723 @@
+
+<script type="importmap">
+{
+  "imports": {
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.556.0",
+    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.10.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
+    "react": "https://aistudiocdn.com/react@^19.2.1",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
+    "vite": "https://aistudiocdn.com/vite@^7.2.6",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.31.0"
+  }
+}
+</script>
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#06b6d4" />
+    <meta name="description" content="A futuristic, glass-morphism styled shopping experience for selecting and customizing GIFs." />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="manifest" href="/manifest.json" />
+    <link id="dynamic-favicon" rel="icon" href="https://cdn-icons-png.flaticon.com/512/1179/1179069.png" />
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1179/1179069.png" />
+    <title>VdM v0.1 | Visual Operating System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Custom utility for 3D flip card support */
+      .perspective-1000 { perspective: 1000px; }
+      .transform-style-3d { transform-style: preserve-3d; }
+      .backface-hidden { backface-visibility: hidden; }
+      .rotate-y-180 { transform: rotateY(180deg); }
+      
+      /* Shimmer Animation */
+      @keyframes shimmer {
+        0% { transform: translateX(-150%); }
+        50% { transform: translateX(150%); }
+        100% { transform: translateX(150%); }
+      }
+      .animate-shimmer { animation: shimmer 2s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+      
+      /* Box Opening Animation */
+      @keyframes box-glow {
+        0%, 100% { box-shadow: 0 0 20px rgba(6,182,212,0.5); }
+        50% { box-shadow: 0 0 50px rgba(6,182,212,1); }
+      }
+      .animate-box-glow { animation: box-glow 2s infinite; }
+
+      @keyframes lid-open {
+        0% { transform: rotateX(0deg); }
+        100% { transform: rotateX(-120deg) translateY(-20px); }
+      }
+      .animate-lid-open { animation: lid-open 1s forwards cubic-bezier(0.4, 0, 0.2, 1); transform-origin: top; }
+
+      /* SHOOTING STAR PERIMETER ANIMATIONS */
+      /* Apple Intelligence Style - Vibrant & Flowing */
+      
+      :root {
+        --star-speed: 6s; /* Smooth flowing speed */
+        --star-thickness: 4px; 
+        --star-length: 60%; 
+        
+        /* Vibrant Apple Intelligence Gradients (Cyan -> Blue -> Purple -> Pink) */
+        /* Increased opacity to make it clearly visible on dark backgrounds */
+        --ai-grad-h: linear-gradient(90deg, transparent 0%, #06b6d4 20%, #3b82f6 50%, #d946ef 80%, transparent 100%);
+        --ai-grad-v: linear-gradient(180deg, transparent 0%, #06b6d4 20%, #3b82f6 50%, #d946ef 80%, transparent 100%);
+        --ai-grad-h-rev: linear-gradient(270deg, transparent 0%, #06b6d4 20%, #3b82f6 50%, #d946ef 80%, transparent 100%);
+        --ai-grad-v-rev: linear-gradient(0deg, transparent 0%, #06b6d4 20%, #3b82f6 50%, #d946ef 80%, transparent 100%);
+      }
+
+      @keyframes star-top {
+        0% { left: -100%; opacity: 0; }
+        10% { opacity: 1; }
+        90% { opacity: 1; }
+        100% { left: 100%; opacity: 0; }
+      }
+      @keyframes star-right {
+        0% { top: -100%; opacity: 0; }
+        10% { opacity: 1; }
+        90% { opacity: 1; }
+        100% { top: 100%; opacity: 0; }
+      }
+      @keyframes star-bottom {
+        0% { right: -100%; opacity: 0; }
+        10% { opacity: 1; }
+        90% { opacity: 1; }
+        100% { right: 100%; opacity: 0; }
+      }
+      @keyframes star-left {
+        0% { bottom: -100%; opacity: 0; }
+        10% { opacity: 1; }
+        90% { opacity: 1; }
+        100% { bottom: 100%; opacity: 0; }
+      }
+
+      .star-line {
+        position: absolute;
+        opacity: 0;
+        filter: blur(4px); /* Soft glow */
+        border-radius: 100px;
+        z-index: 0;
+        box-shadow: 0 0 10px rgba(6, 182, 212, 0.5); /* Add glow box shadow */
+      }
+
+      .star-top {
+        height: var(--star-thickness);
+        width: var(--star-length); 
+        top: 0;
+        left: -100%;
+        background: var(--ai-grad-h);
+        animation: star-top var(--star-speed) linear infinite;
+      }
+      
+      .star-right {
+        width: var(--star-thickness);
+        height: var(--star-length);
+        top: -100%;
+        right: 0;
+        background: var(--ai-grad-v);
+        animation: star-right var(--star-speed) linear infinite;
+        animation-delay: 1.5s; 
+      }
+
+      .star-bottom {
+        height: var(--star-thickness);
+        width: var(--star-length);
+        bottom: 0;
+        right: -100%;
+        background: var(--ai-grad-h-rev);
+        animation: star-bottom var(--star-speed) linear infinite;
+        animation-delay: 3s; 
+      }
+
+      .star-left {
+        width: var(--star-thickness);
+        height: var(--star-length);
+        bottom: -100%;
+        left: 0;
+        background: var(--ai-grad-v-rev);
+        animation: star-left var(--star-speed) linear infinite;
+        animation-delay: 4.5s; 
+      }
+
+    </style>
+    <script id="JSONmaster_system" type="application/json">
+    {
+      "MasterSystem": {
+        "name": "BOSS",
+        "tagline": "Business Operating System Service",
+        "description": "Digital HQ and lead generation system for all brands, remote from home, no physical handling.",
+        "platforms": {
+          "taskManager": "Notion",
+          "jsonStorage": "Local app folder / GitHub",
+          "contentCalendar": "Google Calendar + Notion",
+          "tracking": "Google Sheets",
+          "popUps": "BOSS app + Browser notifications",
+          "aiAssistance": "Ollama + local models",
+          "fileStorage": "Google Drive",
+          "appBuilding": "React + Vite / Expo for mobile"
+        },
+        "tracking": {
+          "moneyGoals": {
+            "weeklyTarget": 1500,
+            "monthlyTarget": 6000,
+            "sixMonthGoal": 36000
+          },
+          "taskCompletion": [],
+          "progressLog": []
+        }
+      },
+      "Services": [
+        {
+          "brand": "BOSS",
+          "type": "Elite Digital Oversight",
+          "description": "Premium digital concierge for high-net-worth individuals. Features the 'Detach' protocol for absolute data sovereignty.",
+          "services": ["Digital organization", "Secure Data Vaults", "Vendor Coordination", "Detach/Wipe capability"],
+          "platforms": ["Notion", "Google Drive (Encrypted)", "Ollama (Local AI)", "Secure Portal"],
+          "leadRouting": "Direct Concierge / Wealth Management Referrals"
+        },
+        {
+          "brand": "5Tore",
+          "type": "Rapid Commerce",
+          "description": "Instant pop-up digital stores. 'From idea to sale in 5 minutes'.",
+          "services": ["5-minute landing pages", "Mini stores", "Flash Sale setups"],
+          "platforms": ["Webflow", "Stripe", "Instagram Shop"],
+          "leadRouting": "Social Media Ads / Viral TikToks"
+        },
+        {
+          "brand": "Homia",
+          "type": "Property Asset Management",
+          "description": "Inventory and file organization for homeowners and landlords.",
+          "services": ["Inventory templates", "Digital file org", "Maintenance Logs", "Tenant Manuals"],
+          "platforms": ["Webflow", "Canva", "Google Drive", "QR Codes"],
+          "leadRouting": "Real Estate Agents / Property Management Firms"
+        },
+        {
+          "brand": "Viva",
+          "type": "Lifestyle & Events",
+          "description": "Digital event planning and marketing for the Latino community.",
+          "services": ["Event Flyers", "Digital Invitations", "Marketing Content"],
+          "platforms": ["Canva", "TikTok", "Instagram", "WhatsApp"],
+          "leadRouting": "Community Groups / Local Event Venues"
+        },
+        {
+          "brand": "Hola",
+          "type": "Family Legacy",
+          "description": "Preserving family history and memories securely.",
+          "services": ["Quinceañera albums", "Drone event media", "Family vaults", "Oral History Recording"],
+          "platforms": ["Canva", "Facebook Groups", "Private Cloud"],
+          "leadRouting": "Word of Mouth / Family Networks"
+        },
+        {
+          "brand": "AIin5",
+          "type": "Micro-Automation",
+          "description": "Simple AI bots and auto-replies for solopreneurs.",
+          "services": ["Microbots", "Auto-replies", "Chat workflows", "Email drafting"],
+          "platforms": ["Ollama", "Local LLM models", "Zapier"],
+          "leadRouting": "LinkedIn / Tech Twitter / Freelance Platforms"
+        }
+      ],
+      "DailyWorkflow": {
+        "Morning": [
+          "Check BOSS task dashboard",
+          "Review emails / messages",
+          "Check lead list updates",
+          "Plan content for the day"
+        ],
+        "Midday": [
+          "Create / schedule posts for 5Tore, Viva, Hola",
+          "Outsource media tasks",
+          "Update digital folders",
+          "Check pop-up reminders"
+        ],
+        "Afternoon": [
+          "Follow up with potential clients",
+          "Update lead pipeline",
+          "Track income & task progress",
+          "Brainstorm new content"
+        ],
+        "Evening": [
+          "Review completed tasks",
+          "Prepare next day’s task list",
+          "Check all platforms are synced"
+        ]
+      }
+    }
+    </script>
+    <script id="JSONorg_profile" type="application/json">
+    {
+      "identity": {
+        "display_name": "BOSS Coiffure & Digital",
+        "legal_name": "Virtual Day Maker LLC",
+        "structure": "Single-Member LLC",
+        "jurisdiction": "Arizona, USA",
+        "founded": "2024",
+        "tax_id_type": "EIN"
+      },
+      "contact": {
+        "support_email": "concierge@your-domain.com",
+        "sales_email": "hello@your-domain.com",
+        "phone_primary": "+1 (602) 555-0100",
+        "website": "https://www.your-domain.com"
+      },
+      "location": {
+        "address_line_1": "123 Luxury Lane",
+        "address_line_2": "Suite 100 (Virtual HQ)",
+        "city": "Scottsdale",
+        "state": "AZ",
+        "zip": "85251",
+        "coordinates": {
+          "lat": 33.4942,
+          "lng": -111.9261
+        }
+      },
+      "socials": {
+        "instagram": "@BOSS_Coiffure",
+        "linkedin": "/in/your-profile",
+        "tiktok": "@AIin5_Demo"
+      },
+      "policies": {
+        "currency": "USD",
+        "payment_methods": ["Stripe", "PayPal", "Zelle"],
+        "cancellation_policy": "24-hour notice required for service cancellation."
+      }
+    }
+    </script>
+    <script id="JSONbusiness_strategy" type="application/json">
+    {
+      "title": "Year-Long Integrated Business Strategy",
+      "focus": "Solopreneur Hybrid Model (Developer CEO)",
+      "core_legal_structure": "Single-Member LLC (Arizona) for liability and tax simplicity.",
+      "strategic_goals": [
+        "Achieve a Blended LTV:CAC Ratio of 3:1 or higher.",
+        "Launch two production-ready apps (B2C & B2B) within 4 months.",
+        "Establish the Home BOSS App as the premier digital concierge service in the Arizona luxury market.",
+        "Maintain a rigorous Time-Block Schedule to prevent context-switching and burnout."
+      ],
+      "weekly_time_blocks": {
+        "developer_ceo_deep_work": "Monday & Tuesday AM (8 hours total) - Focus on coding and system architecture.",
+        "b2c_operations_delivery": "Tuesday PM & Friday AM (8 hours total) - Focus on service delivery, POS, and inventory.",
+        "b2b_sales_client_building": "Wednesday AM & Thursday AM (8 hours total) - Focus on contracts, proposals, and high-value client calls.",
+        "admin_finance_learning": "Friday PM (2 hours total) - Focus on bills, financial review, and email batching."
+      },
+      "quarterly_plan": [
+        {
+          "quarter": "Q1: FOUNDATION & MVP LAUNCH",
+          "goal": "Launch BOSS Coiffure (B2C) and the MVP of the Home BOSS App. Secure 5-10 pilot B2B clients.",
+          "time_allocation": {
+            "Developer_CEO": "50%",
+            "B2C_Ops": "30%",
+            "B2B_Sales": "20%"
+          },
+          "organic_locations_visited": "Scottsdale/Phoenix/Tempe Local B2C Events (Farmers Markets, local high-end coffee shops, social media groups)."
+        },
+        {
+          "quarter": "Q2: AGGRESSIVE B2B ACQUISITION",
+          "goal": "Officially launch the full Home BOSS App. Secure 1-2 key Gatekeeper partnerships (Luxury Realtors/Attorneys).",
+          "time_allocation": {
+            "B2B_Sales": "50%",
+            "Developer_CEO": "30%",
+            "B2C_Ops": "20%"
+          },
+          "organic_locations_visited": "Luxury Realtor offices in Paradise Valley/Arcadia. Custom Home Builder industry events. Estate Planning Councils."
+        },
+        {
+          "quarter": "Q3: OPTIMIZATION & EXPANSION",
+          "goal": "Optimize LTV:CAC. Refine AppSheet UI based on user feedback. Prepare for winter inspection season.",
+          "time_allocation": {
+            "Developer_CEO": "40%",
+            "B2B_Sales": "30%",
+            "B2C_Ops": "30%"
+          },
+          "organic_locations_visited": "Content Creation Visits (B2B properties for photos/videos). Local Chamber of Commerce or small business speaking events."
+        },
+        {
+          "quarter": "Q4: REVIEW & SCALING",
+          "goal": "Finalize year-end financials. Prepare for the first critical hire. Solidify legal and FAA compliance systems.",
+          "time_allocation": {
+            "Developer_CEO": "40%",
+            "B2B_Sales": "30%",
+            "Admin_Finance": "30%"
+          },
+          "organic_locations_visited": "Client Appreciation Events (Exclusive, discreet location for top 10 LTV clients). Targeted networking with high-end CPAs/Wealth Managers."
+        }
+      ],
+      "launch_strategy": {
+        "duration": "Months 1–3 (Rapid 2-App Launch)",
+        "dual_launch_plan": [
+          {
+            "month": 1,
+            "tech_focus": "B2C Launch: Finalize POS, Stylist AppSheet UI, and Retail Inventory in Firestore.",
+            "marketing_focus": "BOSS Coiffure Grand Opening. Focus on local social buzz and 'Founders Cut' discount for immediate data collection."
+          },
+          {
+            "month": 2,
+            "tech_focus": "B2B MVP Launch: Finalize core AppSheet functionality (Ticket Creation, Before/After Photos). Integrate Drone Data upload.",
+            "marketing_focus": "THE RAFFLE POP-UP: Run a high-profile, short-duration (1-week) raffle for a luxury prize. Collect emails/phone numbers in exchange for entry (no purchase necessary)."
+          },
+          {
+            "month": 3,
+            "tech_focus": "Home BOSS App (Full) Launch: Integrate DocAI for automated document tagging. Complete FAA Compliance Engine.",
+            "marketing_focus": "Lead Conversion: Use raffle data to launch first LTV-based B2B cross-sell campaign. Focus B2B sales on pilot clients for contracts."
+          }
+        ],
+        "raffle_popup_strategy": "Run a short, high-profile raffle (non-cash prize) during Month 2. Ensure clear rules (no purchase necessary) and use the collected data to build a core retargeting list for both services."
+      },
+      "key_organic_locations": [
+        "Luxury Real Estate Offices (Scottsdale/Paradise Valley) - **Goal: Realtor partnership for closing gift.**",
+        "Professional Networking Groups (ProVisors, Estate Planning Councils) - **Goal: CPA/Attorney referrals.**",
+        "Local FBOs (Fixed-Base Operators, e.g., Signature) - **Goal: Offer crew services to gain facility access and put the brand in the luxury orbit.**"
+      ]
+    }
+    </script>
+    <script id="JSON_5tore" type="application/json">
+    {
+      "strategy_name": "Rapid Retail Velocity",
+      "target_action": "Impulse Buy",
+      "daily_checklist": [
+        {"task": "Identify Trending Product (AliExpress/TikTok)", "completed": false},
+        {"task": "Generate Product Desc (AI)", "completed": false},
+        {"task": "Create 15s Hype Video", "completed": false},
+        {"task": "Post to TikTok/Reels", "completed": false},
+        {"task": "Check Stripe for Orders", "completed": false}
+      ],
+      "automation_rules": {
+        "rate_limit": "3 posts per hour max",
+        "anti_spam": "Vary hashtags by 20% each post",
+        "response": "Auto-DM coupon code on comment 'WANT'"
+      }
+    }
+    </script>
+    <script id="JSON_AIin5" type="application/json">
+    {
+      "strategy_name": "Instant Authority",
+      "target_action": "Consultation Booked",
+      "daily_checklist": [
+        {"task": "Scrape LinkedIn for 'I need help'", "completed": false},
+        {"task": "Draft 5 AI Solution Pitches", "completed": false},
+        {"task": "Deploy Comment Bot (Soft Sell)", "completed": false},
+        {"task": "Update 'Micro-Tool' Demo", "completed": false}
+      ],
+      "automation_rules": {
+        "rate_limit": "50 comments per day",
+        "anti_spam": "Delay replies by 3-7 minutes (Randomized)",
+        "response": "Direct to portfolio link"
+      }
+    }
+    </script>
+    <script id="JSONbusiness_suite" type="application/json">
+    {
+      "app_name": "VirtualDayMaker2Day",
+      "system_version": "1.0",
+      "crm_operations": {
+        "contacts": [
+            {
+            "name": "John Doe",
+            "phone": "+16025551234",
+            "email": "john@example.com",
+            "platforms": ["WhatsApp", "Google Voice", "SMS"],
+            "tags": ["WAPP", "GV", "SMS", "Property", "Mid-range", "Automation"],
+            "last_interaction": "2025-12-07T10:00:00",
+            "properties": [
+                {
+                "address": "123 Main St, Phoenix, AZ",
+                "estimated_value": 450000,
+                "type": "Single Family",
+                "category": "Mid-range",
+                "tags": ["Drone", "Verified", "Automation"],
+                "notes": "Drone walkthrough available"
+                }
+            ],
+            "messages": [
+                {
+                "message_text": "Hello John, checking in on your property.",
+                "schedule": "2025-12-15T10:00:00",
+                "recurring": "monthly",
+                "status": "pending"
+                }
+            ]
+            }
+        ],
+        "platform_rotation": [
+            { "platform": "WhatsApp", "max_daily_messages": 50, "current_batch": 0 },
+            { "platform": "Google Voice", "max_daily_messages": 40, "current_batch": 0 },
+            { "platform": "TextFree", "max_daily_messages": 20, "current_batch": 0 },
+            { "platform": "Telegram", "max_daily_messages": 100, "current_batch": 0 }
+        ],
+        "delegation": {
+            "google_voice_transfer_ready": true,
+            "home_cell_for_personal_events": true,
+            "partner_can_manage_gv": true
+        }
+      },
+      "business_readiness": {
+        "1_Accounts_and_Communication": {
+            "Google_Voice_Setup": false,
+            "WhatsApp_Business_Ready": false,
+            "Professional_Email_Signature": false,
+            "Telegram_Channel_Active": false,
+            "Voicemail_Greeting_Recorded": false
+        },
+        "2_Marketing_and_Outreach": {
+            "Social_Media_Profiles_Optimized": false,
+            "Content_Calendar_Drafted": false,
+            "Lead_Magnet_Created": false,
+            "Cold_Outreach_Templates_Ready": false,
+            "Ad_Account_Configured": false
+        },
+        "3_Technical_Setup": {
+            "Domain_Connected": false,
+            "Hosting_Deployed": false,
+            "Analytics_Configured": false,
+            "Payment_Gateway_Linked": false,
+            "VPN_Security_Check": false
+        },
+        "4_Services_Ready": {
+            "Service_Menu_Defined": false,
+            "Pricing_Model_Set": false,
+            "Onboarding_Workflow_Tested": false,
+            "Delivery_Assets_Prepared": false,
+            "Contract_Templates_Saved": false
+        },
+        "5_Records_Access": {
+            "Client_Database_Initialized": false,
+            "Invoice_System_Setup": false,
+            "Password_Manager_Secured": false,
+            "Cloud_Storage_Organized": false
+        },
+        "6_Calendar_System": {
+            "Availability_Rules_Set": false,
+            "Booking_Link_Generated": false,
+            "Sync_with_Personal_Calendar": false,
+            "Reminder_Automations_Active": false
+        },
+        "7_Finance_and_Monetization": {
+            "Business_Bank_Account_Linked": false,
+            "Expense_Tracking_Sheet_Live": false,
+            "Tax_Documents_Folder_Ready": false,
+            "Revenue_Goals_Defined": false
+        }
+      },
+      "progress_tracking": {
+        "daily_checklist": [
+          {"task": "Work on app", "completed": false},
+          {"task": "Send 3 outreach messages", "completed": false},
+          {"task": "Update JSON", "completed": false},
+          {"task": "Scan heat zones", "completed": false}
+        ],
+        "revenue": {
+          "monthly_goal": 15000,
+          "current_earned": 0
+        }
+      }
+    }
+    </script>
+    <script id="JSONmarketing_intel" type="application/json">
+    {
+      "arizonaPropertyCases": [
+        {
+          "id": "AZ-2024-RealPage",
+          "who": "Arizona Attorney General's Office, RealPage Inc., 9 major landlords",
+          "what": "Alleged illegal rent price-fixing and collusion to inflate rental prices",
+          "where": "Phoenix and Tucson metro areas, Arizona",
+          "when": "2024-02-28",
+          "link": "https://www.azag.gov/press-release/attorney-general-mayes-sues-realpage-and-residential-landlords-illegal-price-fixing",
+          "summary": "Landlords and software provider conspired to raise rents, creating distrust and instability in rental markets."
+        },
+        {
+          "id": "AZ-2025-Algorithm-Limit",
+          "who": "Arizona Public Media, DOJ, landlords using RealPage software",
+          "what": "Restrictions on algorithmic pricing to prevent price manipulation",
+          "where": "Arizona (Phoenix/Tucson focus), nationwide impact",
+          "when": "2025-11-25",
+          "link": "https://news.azpm.org/p/news-topical-biz/2025/11/25/227398-new-limits-for-rent-algorithm-that-prosecutors-say-let-landlords-drive-up-prices/",
+          "summary": "Legal oversight imposed due to exploitative software pricing practices highlighting flaws in corporate property management."
+        },
+        {
+          "id": "AZ-2024-RentInflationReport",
+          "who": "AZFamily, largest Arizona landlords",
+          "what": "Rent inflation without improvements; opaque management practices",
+          "where": "Statewide, Arizona",
+          "when": "2024-09-19",
+          "link": "https://www.azfamily.com/2024/09/19/arizona-ag-says-many-states-largest-landlords-inflated-rent-prices/",
+          "summary": "Corporate landlords used management software to inflate rent prices, causing frustration and distrust among renters and owners."
+        },
+        {
+          "id": "AZ-2025-Foreclosure-Fraud",
+          "who": "Arizona Attorney General's Office, real-estate operators, title companies",
+          "what": "Fraud and exploitation of homeowners facing foreclosure",
+          "where": "Arizona",
+          "when": "2025-03-10",
+          "link": "https://www.azag.gov/press-release/attorney-general-mayes-sues-real-estate-operators-and-title-companies-defrauding",
+          "summary": "Exposes the risks and lack of trust in property-management and real estate services — demonstrating a need for transparency."
+        }
+      ],
+      "ownerPainPoints": [
+        {
+          "pain": "Hidden fees and unexplained rent increases",
+          "solution": "Your BOSS portal ensures full transparency; all charges documented and visible."
+        },
+        {
+          "pain": "Lack of visibility into property or asset status",
+          "solution": "Digital documentation: media, inventory, maintenance history, asset logs accessible in portal."
+        },
+        {
+          "pain": "Distrust of corporate management, risk of mismanagement",
+          "solution": "Boutique, personalized digital service — owner retains control, avoids conflicts of interest."
+        },
+        {
+          "pain": "Market instability and legal/regulatory risks",
+          "solution": "Records, media, and oversight stored securely; owners can monitor property remotely and make informed decisions."
+        },
+        {
+          "pain": "Luxury/high-end property needs ignored",
+          "solution": "Custom portal with premium media, drone footage, walkthroughs, private vaults, tailored for high-end homes."
+        }
+      ],
+      "yourBOSSService": {
+        "who": "BOSS Digital Oversight & Owner Portal",
+        "what": "Personalized digital assistant/oversight service — not a manager or vendor; provides transparency, media documentation, digital record keeping, and owner control.",
+        "where": "Remote / owner’s property access via portal",
+        "why": "Avoid risk, increase transparency, provide peace of mind and owner control without handling tenants or maintenance.",
+        "how": [
+          "24/7 portal access",
+          "Upload documents via phone or app",
+          "Secure vault for offline and online storage",
+          "Drone footage, video walkthroughs, high-resolution media",
+          "Inventory and maintenance logs",
+          "Owner receives alerts, updates, and reports in real time"
+        ],
+        "link": "/#/admin"
+      }
+    }
+    </script>
+    <script id="JSONservice_areas" type="application/json">
+    {
+      "masterVendorList": [
+        {
+          "vendor": "Example Pool Care AZ",
+          "service": "Pool & Spa Maintenance",
+          "coverageAreas": ["85253","85018","85016","85262","85255"],
+          "notes": "Weekly cleaning, optional repair services"
+        },
+        {
+          "vendor": "Luxury Home Services Phoenix",
+          "service": "Home Maintenance & Repair",
+          "coverageAreas": ["85253","85018","85016","85262","85255"],
+          "notes": "Plumbing, electrical, HVAC for high-end homes"
+        },
+        {
+          "vendor": "Mobile Pet Spa AZ",
+          "service": "Pet Grooming & Care",
+          "coverageAreas": ["85253","85018","85262","85255"],
+          "notes": "Full grooming, mobile service"
+        },
+        {
+          "vendor": "Desert Luxury Drone Media",
+          "service": "Drone Aerial Photography & Video",
+          "coverageAreas": ["85253","85018","85016","85262","85255"],
+          "notes": "Luxury home aerials, 4K virtual tours"
+        },
+        {
+          "vendor": "BOSS Portal Internal",
+          "service": "Digital Property Oversight & Documentation",
+          "coverageAreas": ["85253","85018","85016","85262","85255"],
+          "notes": "Document vaults, asset logs, remote owner access"
+        },
+        {
+          "vendor": "Elite Catering & Private Chef",
+          "service": "Event / Party Catering",
+          "coverageAreas": ["85253","85018","85262","85255"],
+          "notes": "High-end private catering for homes and events"
+        },
+        {
+          "vendor": "Concierge & Lifestyle Services",
+          "service": "Personal Concierge",
+          "coverageAreas": ["85253","85018","85262","85255"],
+          "notes": "Private errands, event planning, lifestyle support"
+        },
+        {
+          "vendor": "Luxury Car Detailing",
+          "service": "Automobile Maintenance & Detailing",
+          "coverageAreas": ["85253","85018","85262","85255"],
+          "notes": "Valet-style detailing at residence"
+        }
+      ],
+      "targetAreas": [
+        {
+          "area": "Paradise Valley, AZ",
+          "zip": "85253",
+          "valueLevel": "Ultra-Luxury",
+          "ownerInsights": {
+            "typicalTraffic": ["Private clubs","Luxury events","Concierge networks"],
+            "socialMediaUsage": "Minimal",
+            "preferredOutreach": ["Personalized email","Direct call","Referral introduction","Invitation to private demo"]
+          }
+        },
+        {
+          "area": "Arcadia, Phoenix, AZ",
+          "zip": "85018",
+          "valueLevel": "High-End Estates",
+          "ownerInsights": {
+            "typicalTraffic": ["Art galleries","Country clubs","Charity events"],
+            "socialMediaUsage": "Low",
+            "preferredOutreach": ["Referral from property manager","Direct mail invitation","Personalized app demo"]
+          }
+        },
+        {
+          "area": "Biltmore Area, Phoenix, AZ",
+          "zip": "85016",
+          "valueLevel": "High-End / Upscale",
+          "ownerInsights": {
+            "typicalTraffic": ["Upscale restaurants","Private gyms","Luxury real estate events"],
+            "socialMediaUsage": "Low",
+            "preferredOutreach": ["Direct referral","Personalized introduction","Exclusive demo event"]
+          }
+        },
+        {
+          "area": "North Scottsdale, AZ",
+          "zip": "85262",
+          "valueLevel": "Luxury Suburban / Golf Community",
+          "ownerInsights": {
+            "typicalTraffic": ["Golf clubs","Private country clubs","Charity events"],
+            "socialMediaUsage": "Minimal",
+            "preferredOutreach": ["Referral","Invitation to demo","Direct contact via concierge"]
+          }
+        },
+        {
+          "area": "Silverleaf / Pinnacle Peak, Scottsdale, AZ",
+          "zip": "85255",
+          "valueLevel": "Ultra-Luxury Golf Estates",
+          "ownerInsights": {
+            "typicalTraffic": ["Golf and social clubs","High-end real estate agents","Exclusive events"],
+            "socialMediaUsage": "Very low",
+            "preferredOutreach": ["Concierge introduction","Direct demo","High-end referral network"]
+          }
+        }
+      ],
+      "popularHangouts": [
+        {"name": "Biltmore Fashion Park", "type": "Shopping & Dining", "zip": "85016"},
+        {"name": "The Phoenician Golf Club", "type": "Golf & Events", "zip": "85253"},
+        {"name": "Arizona Biltmore Spa & Resort", "type": "Wellness & Events", "zip": "85016"},
+        {"name": "Paradise Valley Country Club", "type": "Private Club", "zip": "85253"},
+        {"name": "Camelback Mountain Hiking Trails", "type": "Outdoor Leisure", "zip": "85018"},
+        {"name": "Arcadia Farmers Market", "type": "Local Market", "zip": "85018"},
+        {"name": "Scottsdale Art Walk", "type": "Cultural", "zip": "85255"},
+        {"name": "Desert Mountain Golf Club", "type": "Golf & Leisure", "zip": "85266"},
+        {"name": "North Scottsdale Polo Club", "type": "Equestrian / Social", "zip": "85262"},
+        {"name": "Private Dog Tracks & Training Centers", "type": "Pets / Leisure", "zip": "85253"}
+      ]
+    }
+    </script>
+  <link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
