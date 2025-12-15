@@ -1,17 +1,18 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ThumbsUp, ThumbsDown, ArrowRight, Video, X, Save } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, ArrowRight, Video, X, Save, ShoppingBag, ArrowLeft } from 'lucide-react';
 import { Layout } from '../components/Layout';
 import { GlassCard } from '../components/GlassCard';
-import { useCart, useSettings } from '../App';
+import { useCart, useSettings, useAuth } from '../App';
 import { GifItem } from '../types';
 
 export const GifSelection: React.FC = () => {
   // # REGION: HOOKS & STATE
   const navigate = useNavigate();
   const { addToCart } = useCart();
-  const { inventory, promoVideo, updateInventoryItem } = useSettings();
+  const { inventory, promoVideo, updateInventoryItem, orgProfile } = useSettings();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   
   // EDIT MODE STATE
@@ -96,11 +97,27 @@ export const GifSelection: React.FC = () => {
     <Layout>
       <div className="flex flex-col items-center justify-center w-full min-h-full px-4 md:px-0">
         
+        {/* --- BACK TO ADMIN BUTTON (VISIBLE ONLY TO ADMIN) --- */}
+        {user?.isAdmin && (
+            <div className="fixed top-24 left-6 z-[60] animate-fade-in-up md:top-28">
+                <button
+                    onClick={() => navigate('/admin')}
+                    className="flex items-center gap-2 px-4 py-2 bg-black/60 backdrop-blur-md border border-white/20 rounded-full text-xs font-bold uppercase text-white hover:bg-white/10 transition-colors shadow-xl group"
+                >
+                    <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Back to HQ
+                </button>
+            </div>
+        )}
+
         <div className="w-full max-w-md pb-32 space-y-8">
            {/* Header text for context */}
            <div className="text-center mb-8 animate-fade-in-up">
-              <h1 className="text-3xl font-light text-white tracking-widest uppercase">Choose Your GIF</h1>
-              <p className="text-cyan-400/60 text-sm mt-2">Tap card to inspect details</p>
+              <h1 className="text-3xl font-light text-white tracking-widest uppercase">
+                  {orgProfile?.identity.display_name || "Choose Your Item"}
+              </h1>
+              <p className="text-cyan-400/60 text-sm mt-2">
+                  {orgProfile?.identity.legal_name ? `Official Store of ${orgProfile.identity.legal_name}` : "Tap card to inspect details"}
+              </p>
            </div>
 
            {/* PROMO VIDEO (If Configured) */}
@@ -126,7 +143,7 @@ export const GifSelection: React.FC = () => {
               <SkeletonCard />
               <SkeletonCard />
             </>
-          ) : (
+          ) : inventory.length > 0 ? (
             // Render Actual Content from Context
             inventory.map((gif) => (
               <GlassCard
@@ -197,18 +214,27 @@ export const GifSelection: React.FC = () => {
                 }
               />
             ))
+          ) : (
+            // EMPTY STATE
+            <div className="p-8 text-center border border-dashed border-white/10 rounded-2xl bg-white/5">
+                <ShoppingBag size={48} className="mx-auto text-slate-600 mb-4" />
+                <h2 className="text-white font-bold uppercase tracking-widest">Inventory Empty</h2>
+                <p className="text-slate-500 text-xs mt-2">Go to Admin > Commerce to add products.</p>
+            </div>
           )}
         </div>
 
         {/* Sticky Proceed Button - Elevated Z-Index for Mobile Touch */}
-        <div className="fixed bottom-6 z-[60] w-full max-w-md px-4 pointer-events-none">
-          <button 
-            onClick={() => navigate('/checkout')}
-            className="w-full py-4 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold text-lg tracking-widest shadow-lg shadow-cyan-900/50 flex items-center justify-center gap-3 hover:scale-[1.02] transition-transform pointer-events-auto"
-          >
-            PROCEED TO CHECKOUT <ArrowRight />
-          </button>
-        </div>
+        {inventory.length > 0 && (
+            <div className="fixed bottom-6 z-[60] w-full max-w-md px-4 pointer-events-none">
+            <button 
+                onClick={() => navigate('/checkout')}
+                className="w-full py-4 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold text-lg tracking-widest shadow-lg shadow-cyan-900/50 flex items-center justify-center gap-3 hover:scale-[1.02] transition-transform pointer-events-auto"
+            >
+                PROCEED TO CHECKOUT <ArrowRight />
+            </button>
+            </div>
+        )}
 
         {/* --- EDIT MODAL --- */}
         {editingItem && (

@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ShoppingCart, Settings, Zap, ChevronLeft, ChevronRight, Lock, X, Terminal, Moon, Sun, Volume2, VolumeX, EyeOff, Eye, Palette, Globe, Shield, Mail, FileText, CloudSun, User, Upload, Download, Accessibility, Smartphone, CheckCircle } from 'lucide-react';
+import { ShoppingCart, Settings, Zap, ChevronLeft, ChevronRight, Lock, X, Terminal, Moon, Sun, Volume2, VolumeX, EyeOff, Eye, Palette, Globe, Shield, Mail, FileText, CloudSun, User, Upload, Download, Accessibility, Smartphone, CheckCircle, Type, Minus, Plus, RefreshCw } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart, useSettings, useAuth } from '../App';
 import { AIin5Widget } from './AIin5Widget';
@@ -20,7 +20,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, hideNav = false }) => 
       profileImage, setProfileImage, profilePosition, setProfilePosition,
       deferredPrompt, installApp,
       themeOverrides,
-      accessibilityMode, toggleAccessibilityMode
+      accessibilityMode, toggleAccessibilityMode,
+      fontSize, setFontSize
   } = useSettings();
   
   const navigate = useNavigate();
@@ -105,15 +106,22 @@ export const Layout: React.FC<LayoutProps> = ({ children, hideNav = false }) => 
   const isDark = themeMode === 'dark';
   const isAutumn = themeMode === 'autumn';
 
-  // Dynamic Backgrounds based on Theme Mode
-  const bgClass = isDark 
-    ? 'bg-slate-950 text-white' 
-    : isAutumn
-        ? 'bg-orange-50 text-amber-950'
-        : 'bg-slate-50 text-slate-900';
+  // Dynamic Backgrounds based on Theme Mode OR High Contrast Mode
+  const bgClass = accessibilityMode 
+    ? (isDark ? 'bg-black text-white' : 'bg-white text-black')
+    : isDark 
+        ? 'bg-slate-950 text-white' 
+        : isAutumn
+            ? 'bg-orange-50 text-amber-950'
+            : 'bg-slate-50 text-slate-900';
 
-  const headerClass = isDark ? 'bg-black/20 border-white/10' : 'bg-white/60 border-black/5 shadow-sm';
-  const glassPanelClass = isDark ? 'bg-black border-white/10' : 'bg-white border-black/10';
+  const headerClass = accessibilityMode
+    ? (isDark ? 'bg-black border-white' : 'bg-white border-black border-b')
+    : isDark ? 'bg-black/20 border-white/10' : 'bg-white/60 border-black/5 shadow-sm';
+    
+  const glassPanelClass = accessibilityMode
+    ? (isDark ? 'bg-black border-white' : 'bg-white border-black')
+    : isDark ? 'bg-black border-white/10' : 'bg-white border-black/10';
 
   // Get active overrides for inline styles
   const activeOverride = themeOverrides[themeMode];
@@ -121,8 +129,12 @@ export const Layout: React.FC<LayoutProps> = ({ children, hideNav = false }) => 
   // QR Code URL for current page
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(window.location.href)}&color=${isDark ? 'ffffff' : '000000'}&bgcolor=transparent`;
 
-  // --- AMBIENCE GENERATOR ---
+  // --- AMBIENCE GENERATOR (CHAMELEON LOGIC) ---
   const getAmbience = () => {
+    // If High Contrast Mode is ON, disable all background noise/blur/gradients
+    if (accessibilityMode) return null;
+
+    // If Custom, use custom
     if (decoration === 'custom' && customThemeData) {
         return (
             <>
@@ -130,35 +142,25 @@ export const Layout: React.FC<LayoutProps> = ({ children, hideNav = false }) => 
                     className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full blur-[100px] transition-all duration-1000" 
                     style={{ backgroundColor: customThemeData.primaryColor || 'rgba(100,100,100,0.2)' }} 
                 />
-                <div 
-                    className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] rounded-full blur-[120px] transition-all duration-1000"
-                    style={{ backgroundColor: customThemeData.secondaryColor || 'rgba(100,100,100,0.2)' }}
-                />
-            </>
-        );
-    }
-    if (isAutumn) {
-        return (
-            <>
-                <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-orange-400/20 rounded-full blur-[120px]" />
-                <div className="absolute top-[30%] right-[-20%] w-[500px] h-[500px] bg-amber-500/20 rounded-full blur-[100px]" />
-                <div className="absolute bottom-[-10%] left-[10%] w-[700px] h-[600px] bg-rose-400/15 rounded-full blur-[140px]" />
-                <div className="absolute inset-0 bg-gradient-to-br from-orange-50/40 to-stone-100/40 pointer-events-none mix-blend-overlay" />
-            </>
-        );
-    }
-    if (!isDark && !isAutumn) {
-        return (
-            <>
-                <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-sky-200/20 rounded-full blur-[100px]" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-slate-200/30 rounded-full blur-[120px]" />
-                <div className="absolute inset-0 bg-white/20 pointer-events-none" />
             </>
         );
     }
     
-    // Dark Mode Decorations
+    // Explicit Overrides based on Decoration State (From Admin)
     switch (decoration) {
+        case 'gold': return (
+             <>
+                <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-yellow-600/20 rounded-full blur-[100px]" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-amber-600/10 rounded-full blur-[120px]" />
+                <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-transparent pointer-events-none mix-blend-overlay" />
+            </>
+        );
+        case 'frost': return (
+            <>
+               <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-blue-400/20 rounded-full blur-[100px]" />
+               <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-cyan-200/10 rounded-full blur-[120px]" />
+           </>
+        );
         case 'christmas': return (
             <>
                 <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-red-600/20 rounded-full blur-[100px]" />
@@ -166,12 +168,35 @@ export const Layout: React.FC<LayoutProps> = ({ children, hideNav = false }) => 
                 <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10" />
             </>
         );
-        default: return (
-            <>
-                <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[100px]" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-cyan-600/10 rounded-full blur-[120px]" />
-            </>
+        case 'minimal': return (
+             <div className="absolute inset-0 bg-white/5 pointer-events-none" />
         );
+        case 'neon':
+        default: 
+            // Default Fallback or Explicit Neon
+            if (isAutumn) {
+                return (
+                    <>
+                        <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-orange-400/20 rounded-full blur-[120px]" />
+                        <div className="absolute top-[30%] right-[-20%] w-[500px] h-[500px] bg-amber-500/20 rounded-full blur-[100px]" />
+                        <div className="absolute bottom-[-10%] left-[10%] w-[700px] h-[600px] bg-rose-400/15 rounded-full blur-[140px]" />
+                    </>
+                );
+            }
+            if (!isDark) {
+                return (
+                    <>
+                        <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-sky-200/20 rounded-full blur-[100px]" />
+                        <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-slate-200/30 rounded-full blur-[120px]" />
+                    </>
+                );
+            }
+            return (
+                <>
+                    <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[100px]" />
+                    <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-cyan-600/10 rounded-full blur-[120px]" />
+                </>
+            );
     }
   };
   // # END REGION: VISUALS
@@ -180,9 +205,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, hideNav = false }) => 
     <div 
         className={`relative w-full h-screen overflow-hidden font-sans selection:bg-cyan-500/30 transition-colors duration-500 ${bgClass}`}
         style={{
-            '--app-accent': activeOverride.accent,
-            '--app-text': activeOverride.text,
-            color: activeOverride.text, 
+            '--app-accent': accessibilityMode ? (isDark ? '#FFF' : '#000') : activeOverride.accent,
+            '--app-text': accessibilityMode ? (isDark ? '#FFF' : '#000') : activeOverride.text,
+            color: accessibilityMode ? (isDark ? '#FFF' : '#000') : activeOverride.text, 
         } as React.CSSProperties}
     >
       <style>{`
@@ -203,6 +228,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, hideNav = false }) => 
             onMouseDown={handleProfileMouseDown}
             className="fixed z-[1000] w-12 h-12 rounded-full cursor-move shadow-2xl transition-transform active:scale-95 group hover:ring-2 hover:ring-cyan-500"
             style={{ left: profilePosition.x, top: profilePosition.y, touchAction: 'none' }}
+            role="button"
+            aria-label="User Profile. Drag to move."
+            tabIndex={0}
           >
               <div className="w-full h-full rounded-full overflow-hidden border-2 border-white/20 relative bg-black/50">
                   {profileImage ? (
@@ -222,7 +250,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, hideNav = false }) => 
       {!hideNav && (
         <header className={`absolute top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 md:px-10 backdrop-blur-md border-b transition-colors duration-500 ${headerClass}`}>
           {/* # REGION: LOGO */}
-          <div className="flex items-center gap-2 group cursor-pointer" onClick={() => navigate('/shop')}>
+          <div className="flex items-center gap-2 group cursor-pointer" onClick={() => navigate('/shop')} aria-label="Go to Shop Home" role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && navigate('/shop')}>
             {activeLogo ? (
                 <div className="flex items-center gap-2">
                     <img src={activeLogo} alt="Brand" className="h-10 w-auto object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.5)] transition-all hover:scale-105" />
@@ -245,14 +273,14 @@ export const Layout: React.FC<LayoutProps> = ({ children, hideNav = false }) => 
                  </div>
              )}
             
-            <button onClick={() => setShowMobileConnect(true)} className={`p-2 transition-colors rounded-full ${isDark ? 'hover:bg-white/10 text-slate-300 hover:text-white' : 'hover:bg-black/5 text-stone-600 hover:text-black'}`} title="Connect Mobile Device">
+            <button onClick={() => setShowMobileConnect(true)} className={`p-2 transition-colors rounded-full ${isDark ? 'hover:bg-white/10 text-slate-300 hover:text-white' : 'hover:bg-black/5 text-stone-600 hover:text-black'}`} title="Connect Mobile Device" aria-label="Connect Mobile Device">
                 <Smartphone className="w-6 h-6" />
             </button>
 
-            <button onClick={() => setShowSettingsModal(true)} className={`p-2 transition-colors rounded-full ${isDark ? 'hover:bg-white/10 text-slate-300 hover:text-white' : 'hover:bg-black/5 text-stone-600 hover:text-black'}`}>
+            <button onClick={() => setShowSettingsModal(true)} className={`p-2 transition-colors rounded-full ${isDark ? 'hover:bg-white/10 text-slate-300 hover:text-white' : 'hover:bg-black/5 text-stone-600 hover:text-black'}`} aria-label="Open Settings">
               <Settings className="w-6 h-6" />
             </button>
-            <div onClick={() => navigate('/checkout')} className={`relative p-2 transition-colors rounded-full cursor-pointer ${isDark ? 'hover:bg-white/10 text-slate-300 hover:text-white' : 'hover:bg-black/5 text-stone-600 hover:text-black'}`}>
+            <div onClick={() => navigate('/checkout')} className={`relative p-2 transition-colors rounded-full cursor-pointer ${isDark ? 'hover:bg-white/10 text-slate-300 hover:text-white' : 'hover:bg-black/5 text-stone-600 hover:text-black'}`} role="button" aria-label="Shopping Cart" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && navigate('/checkout')}>
               <ShoppingCart className="w-6 h-6" />
               {items.length > 0 && (
                 <span className="absolute top-0 right-0 flex items-center justify-center w-4 h-4 text-xs font-bold text-white bg-cyan-500 rounded-full animate-pulse">{items.length}</span>
@@ -267,10 +295,10 @@ export const Layout: React.FC<LayoutProps> = ({ children, hideNav = false }) => 
       </main>
       
       {showMobileConnect && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in-up">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in-up" role="dialog" aria-modal="true" aria-labelledby="mobile-connect-title">
             <div className={`w-full max-w-sm rounded-3xl p-8 shadow-2xl relative border ${glassPanelClass} ${isDark ? 'text-white' : 'text-stone-900'} text-center`}>
-                <button onClick={() => setShowMobileConnect(false)} className="absolute top-4 right-4 opacity-50 hover:opacity-100 p-2"><X size={24} /></button>
-                <h2 className="text-xl font-bold tracking-widest uppercase mb-2">Mobile Link</h2>
+                <button onClick={() => setShowMobileConnect(false)} className="absolute top-4 right-4 opacity-50 hover:opacity-100 p-2" aria-label="Close Modal"><X size={24} /></button>
+                <h2 id="mobile-connect-title" className="text-xl font-bold tracking-widest uppercase mb-2">Mobile Link</h2>
                 <p className="text-xs opacity-60 mb-6">Scan to open this session on your phone.</p>
                 <div className="w-64 h-64 mx-auto bg-white p-2 rounded-xl shadow-inner mb-6 flex items-center justify-center overflow-hidden">
                     <img src={qrCodeUrl} alt="Scan to Open" className="w-full h-full object-contain mix-blend-multiply" />
@@ -284,13 +312,13 @@ export const Layout: React.FC<LayoutProps> = ({ children, hideNav = false }) => 
       )}
 
       {showSettingsModal && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-labelledby="settings-title">
            <div className={`w-full max-w-sm rounded-2xl p-6 shadow-2xl relative border ${glassPanelClass} ${isDark ? 'text-white' : 'text-stone-900'}`}>
-              <button onClick={() => { setShowSettingsModal(false); setShowAdminLogin(false); }} className="absolute top-4 right-4 opacity-50 hover:opacity-100"><X size={20} /></button>
+              <button onClick={() => { setShowSettingsModal(false); setShowAdminLogin(false); }} className="absolute top-4 right-4 opacity-50 hover:opacity-100" aria-label="Close Settings"><X size={20} /></button>
               
               {!showAdminLogin ? (
                 <>
-                  <h2 className="text-lg font-bold tracking-widest uppercase mb-6 flex items-center gap-2"><Settings size={18} /> Preferences</h2>
+                  <h2 id="settings-title" className="text-lg font-bold tracking-widest uppercase mb-6 flex items-center gap-2"><Settings size={18} /> Preferences</h2>
                   <div className="space-y-4">
                     
                     {deferredPrompt && (
@@ -301,17 +329,26 @@ export const Layout: React.FC<LayoutProps> = ({ children, hideNav = false }) => 
 
                     <div className="flex items-center justify-between p-3 rounded-lg border border-white/5 bg-white/5">
                         <div className="flex items-center gap-3"><Palette size={18} /><span className="text-sm">Appearance</span></div>
-                        <button onClick={() => setThemeMode(isDark ? 'light' : themeMode === 'light' ? 'autumn' : 'dark')} className="p-2 bg-white/10 rounded-lg">{isDark ? <Moon size={16} /> : isAutumn ? <CloudSun size={16} /> : <Sun size={16} />}</button>
+                        <button onClick={() => setThemeMode(isDark ? 'light' : themeMode === 'light' ? 'autumn' : 'dark')} className="p-2 bg-white/10 rounded-lg" aria-label={`Current theme: ${themeMode}. Click to cycle.`}>{isDark ? <Moon size={16} /> : isAutumn ? <CloudSun size={16} /> : <Sun size={16} />}</button>
                     </div>
 
                     <div className="flex items-center justify-between p-3 rounded-lg border border-white/5 bg-white/5">
-                        <div className="flex items-center gap-3"><Accessibility size={18} /><span className="text-sm">Accessibility Mode</span></div>
-                        <button onClick={toggleAccessibilityMode} className={`p-2 rounded-lg ${accessibilityMode ? 'bg-green-500 text-white' : 'bg-white/10'}`}>{accessibilityMode ? <Eye size={16} /> : <EyeOff size={16} />}</button>
+                        <div className="flex items-center gap-3"><Type size={18} /><span className="text-sm">Text Size</span></div>
+                        <div className="flex gap-2">
+                            <button onClick={() => setFontSize(Math.max(80, fontSize - 10))} className="p-2 bg-white/10 rounded-lg hover:bg-white/20" aria-label="Decrease Font Size"><Minus size={14} /></button>
+                            <button onClick={() => setFontSize(100)} className="p-2 bg-white/10 rounded-lg hover:bg-white/20 text-xs font-bold w-10" aria-label="Reset Font Size">{fontSize}%</button>
+                            <button onClick={() => setFontSize(Math.min(150, fontSize + 10))} className="p-2 bg-white/10 rounded-lg hover:bg-white/20" aria-label="Increase Font Size"><Plus size={14} /></button>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center justify-between p-3 rounded-lg border border-white/5 bg-white/5">
+                        <div className="flex items-center gap-3"><Accessibility size={18} /><span className="text-sm">High Contrast</span></div>
+                        <button onClick={toggleAccessibilityMode} className={`p-2 rounded-lg ${accessibilityMode ? 'bg-green-500 text-white' : 'bg-white/10'}`} aria-label={accessibilityMode ? "Disable High Contrast" : "Enable High Contrast"}>{accessibilityMode ? <Eye size={16} /> : <EyeOff size={16} />}</button>
                     </div>
 
                     <div className="flex items-center justify-between p-3 rounded-lg border border-white/5 bg-white/5">
                         <div className="flex items-center gap-3"><Zap size={18} /><span className="text-sm">Reduce Motion</span></div>
-                        <button onClick={toggleMotion} className={`p-2 rounded-lg ${reduceMotion ? 'bg-green-500 text-white' : 'bg-white/10'}`}>{reduceMotion ? <CheckCircle size={16} /> : <div className="w-4 h-4 rounded-full border border-white/30" />}</button>
+                        <button onClick={toggleMotion} className={`p-2 rounded-lg ${reduceMotion ? 'bg-green-500 text-white' : 'bg-white/10'}`} aria-label={reduceMotion ? "Enable Motion" : "Reduce Motion"}>{reduceMotion ? <CheckCircle size={16} /> : <div className="w-4 h-4 rounded-full border border-white/30" />}</button>
                     </div>
 
                     <button onClick={() => setShowAdminLogin(true)} className="w-full py-3 mt-4 border border-dashed border-white/20 text-slate-400 hover:text-white hover:border-white/40 rounded-xl text-xs font-bold uppercase flex items-center justify-center gap-2"><Lock size={14} /> Admin Access</button>

@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
     Settings, CreditCard, Bot, Shield, Save, 
     LogOut, Image as ImageIcon, AlertTriangle, 
-    Upload, Briefcase, MapPin,
+    Upload, Briefcase, MapPin, Palette,
     Monitor, Menu, X, Users, MessageSquare, Tag, Trash2,
     Megaphone, Calendar, Plus, Sparkles,
     Volume2, Phone, Mail, Home, Search, ArrowLeft, ArrowRight,
@@ -21,7 +21,7 @@ import {
     Wifi, Database, HelpCircle, FileJson, ExternalLink, Box, QrCode
 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
-import { CRMMessage, CRMProperty, OrgProfile } from '../types';
+import { CRMMessage, CRMProperty, OrgProfile, GifItem } from '../types';
 
 export const AdminDashboard: React.FC = () => {
     // # REGION: HOOKS & STATE
@@ -32,12 +32,13 @@ export const AdminDashboard: React.FC = () => {
         activeLogo, setActiveLogo,
         detachSystem,
         systemStatus, systemMode, setSystemMode,
-        themeMode, decoration, licenseTier, vpnConfig,
+        themeMode, setThemeMode, decoration, setDecoration, licenseTier, vpnConfig,
         leads, addLead, updateLeadStatus,
         posts, addPost, removePost,
         contacts, addContact, updateContact, removeContact,
         orgProfile, updateOrgProfile,
-        usageMetrics, trackUsage
+        usageMetrics, trackUsage,
+        inventory, addInventoryItem, removeInventoryItem
     } = useSettings();
     const { logout } = useAuth();
     
@@ -46,6 +47,10 @@ export const AdminDashboard: React.FC = () => {
     const [unsavedChanges, setUnsavedChanges] = useState(false);
     const [localApiKeys, setLocalApiKeys] = useState(apiKeys);
     const [localOrg, setLocalOrg] = useState<OrgProfile | null>(orgProfile);
+    
+    // Inventory Form State
+    const [newItem, setNewItem] = useState<Partial<GifItem>>({ title: '', price: 0, description: '', imageUrl: '' });
+
     const fileInputRef = useRef<HTMLInputElement>(null);
     // # END REGION: HOOKS
 
@@ -84,6 +89,20 @@ export const AdminDashboard: React.FC = () => {
             reader.readAsDataURL(file);
         }
     };
+
+    const handleAddItem = () => {
+        if (!newItem.title || !newItem.price) return;
+        const item: GifItem = {
+            id: Math.random().toString(36).substr(2, 9),
+            title: newItem.title,
+            price: Number(newItem.price),
+            description: newItem.description || '',
+            imageUrl: newItem.imageUrl || 'https://picsum.photos/300/200?random=' + Math.floor(Math.random() * 100),
+            isSpecialPanel: false
+        };
+        addInventoryItem(item);
+        setNewItem({ title: '', price: 0, description: '', imageUrl: '' });
+    };
     // # END REGION: HANDLERS
 
     return (
@@ -105,7 +124,7 @@ export const AdminDashboard: React.FC = () => {
                     <nav className="flex-1 overflow-y-auto p-4 space-y-1">
                         {[
                             { id: 'general', icon: Briefcase, label: 'Identity & Brand' },
-                            { id: 'commerce', icon: CreditCard, label: 'Commerce & PayPal' },
+                            { id: 'commerce', icon: CreditCard, label: 'Commerce & Inventory' },
                             { id: 'marketing', icon: Megaphone, label: 'Universal Intake' },
                             { id: 'crm', icon: Users, label: 'CRM & Clients' },
                             { id: 'bot', icon: Bot, label: 'AI Intelligence' },
@@ -166,6 +185,50 @@ export const AdminDashboard: React.FC = () => {
                                     </div>
                                 </div>
 
+                                {/* VISUAL THEME EDITOR (CHAMELEON CAPABILITY) */}
+                                <div className="p-6 bg-zinc-900 border border-white/10 rounded-2xl">
+                                    <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-6 flex items-center gap-2">
+                                        <Palette size={16} className="text-pink-400" /> Visual Chameleon
+                                    </h3>
+                                    <div className="space-y-6">
+                                        {/* Mode Selection */}
+                                        <div>
+                                            <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Base Mode</label>
+                                            <div className="flex gap-4">
+                                                {['dark', 'light', 'autumn'].map(mode => (
+                                                    <button
+                                                        key={mode}
+                                                        onClick={() => { setThemeMode(mode as any); setUnsavedChanges(true); }}
+                                                        className={`px-4 py-2 rounded-lg border text-xs font-bold uppercase ${themeMode === mode ? 'bg-white text-black border-white' : 'bg-black border-white/10 text-slate-400'}`}
+                                                    >
+                                                        {mode}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Decoration / Vibe */}
+                                        <div>
+                                            <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Store Ambience (Click to Preview)</label>
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                                {['neon', 'gold', 'frost', 'minimal', 'christmas'].map(deco => (
+                                                    <button
+                                                        key={deco}
+                                                        onClick={() => { 
+                                                            setDecoration(deco as any); 
+                                                            // Navigate to Shop to preview immediately
+                                                            navigate('/shop');
+                                                        }}
+                                                        className={`p-3 rounded-lg border text-xs font-bold uppercase transition-all flex items-center justify-center gap-2 ${decoration === deco ? 'bg-cyan-500/20 border-cyan-500 text-cyan-400' : 'bg-black border-white/10 text-slate-500 hover:bg-white/5'}`}
+                                                    >
+                                                        {deco} <Eye size={12} className="opacity-50" />
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 {/* Legal Structure */}
                                 <div className="p-6 bg-zinc-900 border border-white/10 rounded-2xl">
                                     <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-6 flex items-center gap-2">
@@ -173,12 +236,12 @@ export const AdminDashboard: React.FC = () => {
                                     </h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div>
-                                            <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Business Name (DBA)</label>
+                                            <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Store Name (Displayed)</label>
                                             <input 
                                                 value={localOrg.identity.display_name} 
                                                 onChange={(e) => { setLocalOrg({...localOrg, identity: {...localOrg.identity, display_name: e.target.value}}); setUnsavedChanges(true); }}
                                                 className="w-full bg-black border border-white/10 rounded-lg p-3 text-white text-sm outline-none focus:border-cyan-500" 
-                                                placeholder="My Cool Shop"
+                                                placeholder="e.g. Bob's Shoes"
                                             />
                                         </div>
                                         <div>
@@ -187,29 +250,7 @@ export const AdminDashboard: React.FC = () => {
                                                 value={localOrg.identity.legal_name}
                                                 onChange={(e) => { setLocalOrg({...localOrg, identity: {...localOrg.identity, legal_name: e.target.value}}); setUnsavedChanges(true); }}
                                                 className="w-full bg-black border border-white/10 rounded-lg p-3 text-white text-sm outline-none focus:border-cyan-500" 
-                                                placeholder="John Doe"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Structure</label>
-                                            <select 
-                                                value={localOrg.identity.structure}
-                                                onChange={(e) => { setLocalOrg({...localOrg, identity: {...localOrg.identity, structure: e.target.value}}); setUnsavedChanges(true); }}
-                                                className="w-full bg-black border border-white/10 rounded-lg p-3 text-white text-sm outline-none focus:border-cyan-500"
-                                            >
-                                                <option>Sole Proprietorship</option>
-                                                <option>LLC</option>
-                                                <option>Corporation</option>
-                                                <option>Non-Profit</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Website URL</label>
-                                            <input 
-                                                value={localOrg.contact.website}
-                                                onChange={(e) => { setLocalOrg({...localOrg, contact: {...localOrg.contact, website: e.target.value}}); setUnsavedChanges(true); }}
-                                                className="w-full bg-black border border-white/10 rounded-lg p-3 text-white text-sm outline-none focus:border-cyan-500" 
-                                                placeholder="https://my-app.vercel.app"
+                                                placeholder="e.g. Robert Smith LLC"
                                             />
                                         </div>
                                     </div>
@@ -285,9 +326,77 @@ export const AdminDashboard: React.FC = () => {
                             </div>
                         )}
 
-                        {/* --- TAB: COMMERCE (Keys) --- */}
+                        {/* --- TAB: COMMERCE (Keys & Inventory) --- */}
                         {activeTab === 'commerce' && localOrg && (
                             <div className="max-w-4xl mx-auto space-y-8 animate-fade-in-up">
+                                
+                                {/* 1. INVENTORY MANAGER (NEW) */}
+                                <div className="p-6 bg-zinc-900 border border-white/10 rounded-2xl">
+                                    <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-6 flex items-center gap-2">
+                                        <ShoppingBag size={16} className="text-purple-400" /> Live Inventory
+                                    </h3>
+
+                                    {/* Add New Item */}
+                                    <div className="mb-6 p-4 bg-white/5 rounded-xl border border-white/10">
+                                        <h4 className="text-xs font-bold text-slate-400 uppercase mb-4">Add Product</h4>
+                                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                            <input 
+                                                value={newItem.title}
+                                                onChange={(e) => setNewItem({...newItem, title: e.target.value})}
+                                                className="bg-black border border-white/10 rounded-lg p-3 text-white text-xs"
+                                                placeholder="Product Name"
+                                            />
+                                            <input 
+                                                type="number"
+                                                value={newItem.price}
+                                                onChange={(e) => setNewItem({...newItem, price: Number(e.target.value)})}
+                                                className="bg-black border border-white/10 rounded-lg p-3 text-white text-xs"
+                                                placeholder="Price ($)"
+                                            />
+                                            <input 
+                                                value={newItem.imageUrl}
+                                                onChange={(e) => setNewItem({...newItem, imageUrl: e.target.value})}
+                                                className="bg-black border border-white/10 rounded-lg p-3 text-white text-xs"
+                                                placeholder="Image URL (Optional)"
+                                            />
+                                            <button 
+                                                onClick={handleAddItem}
+                                                className="bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-bold uppercase text-xs transition-colors"
+                                            >
+                                                Add Item
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Inventory List */}
+                                    <div className="space-y-2">
+                                        {inventory.map(item => (
+                                            <div key={item.id} className="flex justify-between items-center bg-black/40 p-3 rounded-lg border border-white/5">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 bg-white/10 rounded flex items-center justify-center overflow-hidden">
+                                                        {item.imageUrl ? <img src={item.imageUrl} className="w-full h-full object-cover" /> : <Image size={16} />}
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-bold text-white">{item.title}</p>
+                                                        <p className="text-xs text-slate-500">${item.price.toFixed(2)}</p>
+                                                    </div>
+                                                </div>
+                                                <button 
+                                                    onClick={() => removeInventoryItem(item.id)}
+                                                    className="p-2 text-slate-500 hover:text-red-500 transition-colors"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                        {inventory.length === 0 && (
+                                            <div className="text-center py-6 text-slate-500 text-xs italic">
+                                                No products listed. Add one above.
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
                                 <div className="p-6 bg-zinc-900 border border-white/10 rounded-2xl">
                                     <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-6 flex items-center gap-2">
                                         <CreditCard size={16} className="text-cyan-400" /> Payment Gateways
@@ -361,10 +470,38 @@ export const AdminDashboard: React.FC = () => {
                             </div>
                         )}
 
+                        {/* --- SYSTEM TAB (DETACH) --- */}
+                        {activeTab === 'system' && (
+                             <div className="max-w-4xl mx-auto space-y-8 animate-fade-in-up">
+                                 {/* SYSTEM DETACH CARD */}
+                                 <div className="p-6 bg-red-900/10 border border-red-500/30 rounded-2xl relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 p-3 bg-red-500/10 rounded-bl-xl text-red-500 flex items-center gap-2">
+                                        <Shield size={14} /> <span className="text-[10px] font-bold uppercase">Danger Zone</span>
+                                    </div>
+                                    <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-4">System Handover</h3>
+                                    <p className="text-sm text-slate-400 mb-6">
+                                        Ready to give this store to a client? This will <strong>wipe all your Admin Keys</strong> and reset the system to "Bootloader Mode". 
+                                        The next person to open the app will be asked to set it up as the new owner.
+                                    </p>
+                                    <button 
+                                        onClick={() => {
+                                            if(window.confirm("ARE YOU SURE? This will wipe your keys and prepare the system for client handover.")) {
+                                                detachSystem();
+                                                navigate('/');
+                                            }
+                                        }}
+                                        className="px-6 py-3 bg-red-600 hover:bg-red-500 text-white font-bold uppercase tracking-widest rounded-lg flex items-center gap-2 shadow-[0_0_20px_rgba(220,38,38,0.4)] transition-all"
+                                    >
+                                        <LogOut size={16} /> Execute Detach Protocol
+                                    </button>
+                                 </div>
+                             </div>
+                        )}
+
                         {/* --- OTHER TABS PLACEHOLDERS (To keep code valid) --- */}
-                        {activeTab !== 'general' && activeTab !== 'commerce' && (
+                        {activeTab !== 'general' && activeTab !== 'commerce' && activeTab !== 'system' && (
                              <div className="flex items-center justify-center h-64 text-slate-500 text-sm">
-                                 Module {activeTab.toUpperCase()} is active but hidden for address edit view.
+                                 Module {activeTab.toUpperCase()} is active but hidden for this simplified view.
                              </div>
                         )}
 

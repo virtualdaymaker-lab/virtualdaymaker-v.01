@@ -241,6 +241,8 @@ export interface SettingsContextType {
 
   accessibilityMode: boolean;
   toggleAccessibilityMode: () => void;
+  fontSize: number;
+  setFontSize: (size: number) => void;
 
   profileImage: string | null;
   setProfileImage: (url: string | null) => void;

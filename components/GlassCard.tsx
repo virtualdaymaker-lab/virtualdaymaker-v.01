@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 
 interface GlassCardProps {
@@ -17,8 +18,18 @@ export const GlassCard: React.FC<GlassCardProps> = ({
 
   return (
     <div 
-      className={`group relative w-full ${heightClass} perspective-1000 cursor-pointer my-6`}
+      className={`group relative w-full ${heightClass} perspective-1000 cursor-pointer my-6 focus:outline-none focus:ring-2 focus:ring-cyan-500 rounded-2xl`}
       onClick={() => setIsFlipped(!isFlipped)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          setIsFlipped(!isFlipped);
+        }
+      }}
+      tabIndex={0}
+      role="button"
+      aria-pressed={isFlipped}
+      aria-label={isFlipped ? "Product Details revealed. Press Enter to flip back." : "Product Card. Press Enter to see details."}
     >
       <div 
         className={`relative w-full h-full transition-all duration-500 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}

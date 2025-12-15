@@ -528,6 +528,21 @@ const App: React.FC = () => {
       });
   };
 
+  // Font Size State
+  const [fontSize, setFontSizeState] = useState<number>(() => 
+      safeParse('gifos_font_size', 100)
+  );
+
+  const setFontSize = (size: number) => {
+      setFontSizeState(size);
+      localStorage.setItem('gifos_font_size', String(size));
+  };
+
+  // Effect to apply font size
+  useEffect(() => {
+      document.documentElement.style.fontSize = `${fontSize}%`;
+  }, [fontSize]);
+
   // --- SEASONAL LOGIC ---
   const [decoration, setDecoration] = useState<AppDecoration>(() => {
       const now = new Date();
@@ -643,6 +658,7 @@ const App: React.FC = () => {
     setThemeOverrides(DEFAULT_THEME_OVERRIDES); // Reset Theme
     setPromoVideo(''); // Reset Video
     setAccessibilityMode(false);
+    setFontSize(100); // Reset Font Size
     setOrgProfile(null); // Reset Org Profile
     setUsageMetrics({ requests_1_5: 0, requests_2_5: 0, map_loads: 0, emails_sent: 0, storage_used_mb: 15, last_reset: new Date().toISOString() }); // Reset Usage
     
@@ -685,6 +701,7 @@ const App: React.FC = () => {
         activeLogo, setActiveLogo: updateActiveLogo,
         promoVideo, setPromoVideo,
         accessibilityMode, toggleAccessibilityMode,
+        fontSize, setFontSize,
         profileImage, setProfileImage,
         profilePosition, setProfilePosition,
         botConfig, setBotConfig,
